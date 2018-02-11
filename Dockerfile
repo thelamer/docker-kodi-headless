@@ -7,6 +7,7 @@ LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DA
 LABEL maintainer="sparklyballs"
 
 # package versions
+ARG LIBBLURAY_VER="1.0.2"
 ARG KODI_NAME="Krypton"
 ARG KODI_VER="17.6"
 
@@ -25,7 +26,8 @@ ARG BUILD_DEPENDENCIES="\
 	automake \
 	autopoint \
 	autotools-dev \
-	cmake	\
+	cec-utils \
+	cmake \
 	curl \
 	default-jdk \
 	default-jre \
@@ -41,7 +43,6 @@ ARG BUILD_DEPENDENCIES="\
 	libbz2-dev \
 	libcap-dev \
 	libcdio-dev \
-	libcec-dev \
 	libcurl4-openssl-dev \
 	libcwiid-dev \
 	libdbus-1-dev \
@@ -98,25 +99,31 @@ ARG BUILD_DEPENDENCIES="\
 RUN \
  echo "**** add additional repositories ****" && \
  apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 828AB726 && \
+ apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 91E7EE5E && \
+ apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5F6EB4BE && \
  echo "deb http://ppa.launchpad.net/george-edison55/cmake-3.x/ubuntu xenial main" >> \
 	/etc/apt/sources.list.d/cmake.list && \
  echo "deb-src http://ppa.launchpad.net/george-edison55/cmake-3.x/ubuntu xenial main" >> \
 	/etc/apt/sources.list.d/cmake.list && \
- apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 91E7EE5E && \
  echo "deb http://ppa.launchpad.net/team-xbmc/xbmc-ppa-build-depends/ubuntu xenial main" >> \
 	/etc/apt/sources.list.d/kodi.list && \
  echo "deb-src http://ppa.launchpad.net/team-xbmc/xbmc-ppa-build-depends/ubuntu xenial main" >> \
 	/etc/apt/sources.list.d/kodi.list && \
+ echo "deb http://ppa.launchpad.net/pulse-eight/testing/ubuntu xenial main" >> \
+	/etc/apt/sources.list.d/cec.list && \
+ echo "deb-src http://ppa.launchpad.net/pulse-eight/testing/ubuntu xenial main" >> \
+	/etc/apt/sources.list.d/cec.list && \
  echo "**** install build packages ****" && \
  apt-get update && \
  apt-get install -y \
 	$BUILD_DEPENDENCIES
 RUN \
+ echo "**** compile libbluray ****" && \
  mkdir -p \
 	/tmp/bluray && \
  curl -o \
  /tmp/bluray-src.tar.bz2 -L \
-	"ftp://ftp.videolan.org/pub/videolan/libbluray/1.0.2/libbluray-1.0.2.tar.bz2" && \
+	"ftp://ftp.videolan.org/pub/videolan/libbluray/${LIBBLURAY_VER}/libbluray-${LIBBLURAY_VER}.tar.bz2" && \
  tar xf \
  /tmp/bluray-src.tar.bz2 -C \
 	/tmp/bluray --strip-components=1 && \
@@ -127,6 +134,7 @@ RUN \
  make install
 
 RUN \
+ echo "**** compile kodi ****" && \
  mkdir -p \
 	/tmp/kodi-src/kodi-build && \
  curl -o \
@@ -138,3 +146,5 @@ RUN \
  cd /tmp/kodi-src/kodi-build && \
  cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
  cmake --build . -- VERBOSE=1
+
+RUN cd /tmp/kodi-src/kodi-build && make install
