@@ -127,8 +127,6 @@ RUN \
  make install
 
 RUN \
- apt-get update && \
- apt-get install -y \
  mkdir -p \
 	/tmp/kodi-src/kodi-build && \
  curl -o \
