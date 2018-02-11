@@ -6,183 +6,137 @@ ARG VERSION
 LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
 LABEL maintainer="sparklyballs"
 
-# package versions
+# package versions
 ARG KODI_NAME="Krypton"
 ARG KODI_VER="17.6"
 
-# environment settings
+# environment settings
 ARG DEBIAN_FRONTEND="noninteractive"
 ENV HOME="/config"
 
-# copy patches and excludes
+# copy patches and excludes
 COPY patches/ /patches/
 COPY excludes /etc/dpkg/dpkg.cfg.d/excludes
 
-# build packages variable
+# build packages variable
 ARG BUILD_DEPENDENCIES="\
 	ant \
 	autoconf \
 	automake \
 	autopoint \
-	binutils \
-	cmake \
+	autotools-dev \
+	cmake	\
 	curl \
 	default-jdk \
-	doxygen \
-	g++ \
+	default-jre \
 	gawk \
-	gcc \
-	git-core \
+	git \
 	gperf \
+	libao-dev \
+	libasound2-dev \
 	libass-dev \
 	libavahi-client-dev \
-	libbluray-dev \
-	libboost1.58-dev \
-	libbz2-ocaml-dev \
+	libavahi-common-dev \
+	libbluetooth-dev \
+	libbz2-dev \
 	libcap-dev \
+	libcdio-dev \
+	libcec-dev \
 	libcurl4-openssl-dev \
+	libcwiid-dev \
+	libdbus-1-dev \
 	libegl1-mesa-dev \
-	libflac-dev \
+	libfmt3-dev \
+	libfontconfig-dev \
 	libfreetype6-dev \
+	libfribidi-dev \
 	libgif-dev \
-	libgle3-dev \
-	libglew-dev \
-	libgnutls-dev \
+	libgl1-mesa-dev \
+	libglu1-mesa-dev \
+	libglu-dev \
 	libiso9660-dev \
-	libjasper-dev \
 	libjpeg-dev \
 	liblcms2-dev \
+	libltdl-dev \
 	liblzo2-dev \
 	libmicrohttpd-dev \
-	libmpeg2-4-dev \
+	libmpcdec-dev \
 	libmysqlclient-dev \
 	libnfs-dev \
 	libpcre3-dev \
 	libplist-dev \
+	libpng-dev \
+	libpulse-dev \
 	libsmbclient-dev \
 	libsqlite3-dev \
 	libssh-dev \
+	libssl-dev \
+	libswscale-dev \
 	libtag1-dev \
-	libtiff5-dev \
 	libtinyxml-dev \
 	libtool \
-	libvorbis-dev \
+	libudev-dev \
+	libusb-dev \
+	libva-dev \
+	libvdpau-dev \
 	libxml2-dev \
+	libxmu-dev \
 	libxrandr-dev \
-	libxslt-dev \
-	libyajl-dev \
-	m4 \
-	make \
-	openjdk-8-jre-headless \
+	libxslt1-dev \
+	libxt-dev \
+	lsb-release \
+	nasm \
 	python-dev \
+	python-imaging \
+	rapidjson-dev \
 	swig \
 	uuid-dev \
 	yasm \
-	zip"
-
-# runtime packages variable
-ARG RUNTIME_DEPENDENCIES="\
-	libcdio13 \
-	libcurl3 \
-	libegl1-mesa \
-	libfreetype6 \
-	libfribidi0 \
-	libglew1.13 \
-	libjpeg8 \
-	liblcms2-2 \
-	liblzo2-2 \
-	libmicrohttpd10 \
-	libmysqlclient20 \
-	libnfs8 \
-	libpcrecpp0v5 \
-	libplist3 \
-	libpython2.7 \
-	libsmbclient \
-	libssh-4 \
-	libtag1v5 \
-	libtinyxml2.6.2v5 \
-	libvorbisenc2 \
-	libxml2 \
-	libxrandr2 \
-	libxslt1.1 \
-	libyajl2"
+	zip \
+	zlib1g-dev"
 
 RUN \
- echo "**** add cmake  repository ****" && \
+ echo "**** add additional repositories ****" && \
  apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 828AB726 && \
  echo "deb http://ppa.launchpad.net/george-edison55/cmake-3.x/ubuntu xenial main" >> \
 	/etc/apt/sources.list.d/cmake.list && \
  echo "deb-src http://ppa.launchpad.net/george-edison55/cmake-3.x/ubuntu xenial main" >> \
 	/etc/apt/sources.list.d/cmake.list && \
+ apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 91E7EE5E && \
+ echo "deb http://ppa.launchpad.net/team-xbmc/xbmc-ppa-build-depends/ubuntu xenial main" >> \
+	/etc/apt/sources.list.d/kodi.list && \
+ echo "deb-src http://ppa.launchpad.net/team-xbmc/xbmc-ppa-build-depends/ubuntu xenial main" >> \
+	/etc/apt/sources.list.d/kodi.list && \
  echo "**** install build packages ****" && \
  apt-get update && \
  apt-get install -y \
- 	$BUILD_DEPENDENCIES && \
- echo "**** compile kodi ****" && \
+	$BUILD_DEPENDENCIES
+RUN \
  mkdir -p \
-	/tmp/kodi-source && \
+	/tmp/bluray && \
  curl -o \
- /tmp/kodi.tar.gz -L \
-	"https://github.com/xbmc/xbmc/archive/${KODI_VER}-${KODI_NAME}.tar.gz" && \
- tar xf /tmp/kodi.tar.gz -C \
-	/tmp/kodi-source --strip-components=1 && \
- cd /tmp/kodi-source && \
- git apply \
-	/patches/"${KODI_NAME}"/headless.patch && \
- mkdir -p \
-	/tmp/kodi-source/build && \
- cd /tmp/kodi-source/build && \
- cmake \
-	../project/cmake/ \
-		-DCMAKE_INSTALL_LIBDIR=/usr/lib \
-		-DCMAKE_INSTALL_PREFIX=/usr \
-		-DENABLE_AIRTUNES=OFF \
-		-DENABLE_ALSA=OFF \
-		-DENABLE_AVAHI=OFF \
-		-DENABLE_BLUETOOTH=OFF \
-		-DENABLE_BLURAY=ON \
-		-DENABLE_CAP=OFF \
-		-DENABLE_CEC=OFF \
-		-DENABLE_DBUS=OFF \
-		-DENABLE_DVDCSS=OFF \
-		-DENABLE_LIBUSB=OFF \
-		-DENABLE_NFS=ON \
-		-DENABLE_NONFREE=OFF \
-		-DENABLE_OPTICAL=OFF \
-		-DENABLE_PULSEAUDIO=OFF \
-		-DENABLE_SDL=OFF \
-		-DENABLE_SSH=ON \
-		-DENABLE_UDEV=OFF \
-		-DENABLE_UPNP=ON \
-		-DENABLE_VAAPI=OFF \
-		-DENABLE_VDPAU=OFF && \
+ /tmp/bluray-src.tar.bz2 -L \
+	"ftp://ftp.videolan.org/pub/videolan/libbluray/1.0.2/libbluray-1.0.2.tar.bz2" && \
+ tar xf \
+ /tmp/bluray-src.tar.bz2 -C \
+	/tmp/bluray --strip-components=1 && \
+ cd /tmp/bluray && \
+ ./configure \
+	--prefix=/usr && \
  make && \
- make install && \
- echo "**** install kodi-send ****" && \
- install -Dm755 \
-	/tmp/kodi-source/tools/EventClients/Clients/Kodi\ Send/kodi-send.py \
-	/usr/bin/kodi-send && \
- install -Dm644 \
-	/tmp/kodi-source/tools/EventClients/lib/python/xbmcclient.py \
-	/usr/lib/python2.7/xbmcclient.py && \
- echo "**** uninstall build packages ****" && \
- apt-get purge -y --auto-remove \
-	$BUILD_DEPENDENCIES && \
- echo "**** install runtime packages ****" && \
+ make install
+
+RUN \
  apt-get update && \
  apt-get install -y \
-	--no-install-recommends \
-	$RUNTIME_DEPENDENCIES && \
- echo "**** cleanup ****" && \
- apt-get clean && \
- rm -rf \
-	/tmp/* \
-	/var/lib/apt/lists/* \
-	/var/tmp/*
-
-# add local files
-COPY root/ /
-
-# ports and volumes
-VOLUME /config/.kodi
-EXPOSE 8080 9777/udp
+ mkdir -p \
+	/tmp/kodi-src/kodi-build && \
+ curl -o \
+ /tmp/kodi.tar.gz -L \
+	"https://github.com/xbmc/xbmc/archive/master.tar.gz" && \
+ tar xf \
+ /tmp/kodi.tar.gz -C \
+	/tmp/kodi-src --strip-components=1 && \
+ cd /tmp/kodi-src/kodi-build && \
+ cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
+ cmake --build . -- VERBOSE=1
