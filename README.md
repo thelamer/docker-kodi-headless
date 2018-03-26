@@ -30,16 +30,6 @@ docker create --name=kodi-headless \
 linuxserver/kodi-headless
 ```
 
-You can choose between ,using tags, various main versions of kodi.
-
-Add one of the tags,  if required,  to the linuxserver/kodi-headless line of the run/create command in the following format, linuxserver/kodi-headless:Krypton
-
-#### Tags
-+ **Helix**
-+ **Isengard**
-+ **Jarvis**
-+ **Krypton** : current default branch.
-
 
 **Parameters**
 

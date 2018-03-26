@@ -3,12 +3,9 @@ FROM lsiobase/ubuntu:xenial
 # set version label
 ARG BUILD_DATE
 ARG VERSION
+ARG KODI_RELEASE
 LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
 LABEL maintainer="sparklyballs"
-
-# package versions
-ARG KODI_NAME="Krypton"
-ARG KODI_VER="17.6"
 
 # environment settings
 ARG DEBIAN_FRONTEND="noninteractive"
@@ -123,12 +120,12 @@ RUN \
 	/tmp/kodi-source && \
  curl -o \
  /tmp/kodi.tar.gz -L \
-	"https://github.com/xbmc/xbmc/archive/${KODI_VER}-${KODI_NAME}.tar.gz" && \
+	"https://github.com/xbmc/xbmc/archive/${KODI_RELEASE}.tar.gz" && \
  tar xf /tmp/kodi.tar.gz -C \
 	/tmp/kodi-source --strip-components=1 && \
  cd /tmp/kodi-source && \
  git apply \
-	/patches/"${KODI_NAME}"/headless.patch && \
+	/patches/Current/headless.patch && \
  mkdir -p \
 	/tmp/kodi-source/build && \
  cd /tmp/kodi-source/build && \
